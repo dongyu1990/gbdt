@@ -5,6 +5,7 @@
 
 #include "data.hpp"
 #include <map>
+#include <iostream>
 #include <vector>
 
 namespace gbdt {
@@ -45,18 +46,19 @@ class Node {
 
 class RegressionTree {
  public:
-  RegressionTree(): root(NULL), gain(NULL) {}
+  RegressionTree(): root(NULL), gain(NULL),gain_predict(NULL) {}
   ~RegressionTree() { delete root; delete[] gain; }
 
   void Fit(DataVector *data) { Fit(data, data->size()); }
   void Fit(DataVector *data, size_t len);
 
-  ValueType Predict(const Tuple &t) const;
+  ValueType Predict(const Tuple &t, bool flag);
 
   std::string Save() const;
   void Load(const std::string &s);
 
   double *GetGain() { return gain; }
+  double *GetGain_predict() { return gain_predict; }
 
  private:
   static void Fit(DataVector *data,
@@ -70,6 +72,7 @@ class RegressionTree {
                   size_t depth,
                   double *gain);
 
+  static ValueType Predict(const Node *node, const Tuple &t, double * gain_predict);
   static ValueType Predict(const Node *node, const Tuple &t);
 
   static void SaveAux(const Node *node,
@@ -79,6 +82,7 @@ class RegressionTree {
  private:
   Node *root;
   double *gain;
+  double *gain_predict;
 
   DISALLOW_COPY_AND_ASSIGN(RegressionTree);
 };

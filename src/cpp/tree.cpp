@@ -63,6 +63,26 @@ void RegressionTree::Fit(DataVector *data,
   }
 }
 
+ValueType RegressionTree::Predict(const Node *root, const Tuple &t, double * gain_predict) {
+  if (root->leaf) {
+    return root->pred;
+  }
+  if (t.feature[root->index] == kUnknownValue) {
+    if (root->child[Node::UNKNOWN]) {
+      gain_predict[root->index] += (root->child[Node::UNKNOWN]->pred - root->pred);
+      return Predict(root->child[Node::UNKNOWN], t, gain_predict);
+    } else {
+      return root->pred;
+    }
+  } else if (t.feature[root->index] < root->value) {
+    gain_predict[root->index] += (root->child[Node::LT]->pred - root->pred);
+    return Predict(root->child[Node::LT], t, gain_predict);
+  } else {
+    gain_predict[root->index] += (root->child[Node::GE]->pred - root->pred);
+    return Predict(root->child[Node::GE], t,gain_predict);
+  }
+}
+
 ValueType RegressionTree::Predict(const Node *root, const Tuple &t) {
   if (root->leaf) {
     return root->pred;
@@ -92,8 +112,15 @@ void RegressionTree::Fit(DataVector *data, size_t len) {
   Fit(data, len, root, 0, gain);
 }
 
-ValueType RegressionTree::Predict(const Tuple &t) const {
-  return Predict(root, t);
+ValueType RegressionTree::Predict(const Tuple &t , bool flag) {
+  if (flag)
+  {
+    delete [] gain_predict;
+    gain_predict = new double[g_conf.number_of_feature];
+    return Predict(root, t,gain_predict);
+  }
+  else
+      return Predict(root, t);
 }
 
 std::string RegressionTree::Save() const {

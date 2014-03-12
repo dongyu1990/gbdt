@@ -14,7 +14,7 @@
 #endif
 
 namespace gbdt {
-ValueType GBDT::Predict(const Tuple &t, size_t n) const {
+ValueType GBDT::Predict(const Tuple &t, size_t n,bool flag) {
   if (!trees)
     return kUnknownValue;
 
@@ -22,9 +22,29 @@ ValueType GBDT::Predict(const Tuple &t, size_t n) const {
 
   ValueType r = bias;
   for (size_t i = 0; i < n; ++i) {
-    r += shrinkage * trees[i].Predict(t);
+    r += shrinkage * trees[i].Predict(t, flag);
+
+  }
+  if(flag)
+ {
+  //caculate the gain_predict
+  delete[] gain_predict;
+  gain_predict = new double[g_conf.number_of_feature];
+
+  for (size_t i = 0; i < g_conf.number_of_feature; ++i) {
+    gain_predict[i] = 0.0;
   }
 
+  for (size_t j = 0; j < iterations; ++j) {
+    double *g = trees[j].GetGain_predict();
+    for (size_t i = 0; i < g_conf.number_of_feature; ++i) {
+      gain_predict[i] += g[i];
+    }
+  }
+  for (size_t i = 0; i < g_conf.number_of_feature; ++i) {
+    std::cout<<"the "<<i<<"th feature "<<": "<<gain_predict[i]<<std::endl;
+ }
+ } 
   return r;
 }
 
@@ -71,7 +91,7 @@ void GBDT::Fit(DataVector *d) {
 
     if (g_conf.loss == SQUARED_ERROR) {
       for (size_t j = 0; j < samples; ++j) {
-        ValueType p = Predict(*(*d)[j], i);
+        ValueType p = Predict(*(*d)[j], i, false);
         (*d)[j]->target = (*d)[j]->label - p;
       }
 
@@ -80,7 +100,7 @@ void GBDT::Fit(DataVector *d) {
         double c = 0;
         DataVector::iterator iter = d->begin();
         for ( ; iter != d->end(); ++iter) {
-          ValueType p = Predict(**iter, i);
+          ValueType p = Predict(**iter, i, false);
           s += Squared((*iter)->label - p) * (*iter)->weight;
           c += (*iter)->weight;
         }
@@ -88,7 +108,7 @@ void GBDT::Fit(DataVector *d) {
       }
     } else if (g_conf.loss == LOG_LIKELIHOOD) {
       for (size_t j = 0; j < samples; ++j) {
-        ValueType p = Predict(*(*d)[j], i);
+        ValueType p = Predict(*(*d)[j], i,false);
         (*d)[j]->target =
             static_cast<ValueType>(LogitLossGradient((*d)[j]->label, p));
       }
@@ -97,7 +117,7 @@ void GBDT::Fit(DataVector *d) {
         Auc auc;
         DataVector::iterator iter = d->begin();
         for ( ; iter != d->end(); ++iter) {
-          ValueType p = Logit(Predict(**iter, i));
+          ValueType p = Logit(Predict(**iter, i, false));
           auc.Add(p, (*iter)->label);
         }
         std::cout << "auc: " << auc.CalculateAuc() << std::endl;
@@ -121,6 +141,9 @@ void GBDT::Fit(DataVector *d) {
     for (size_t i = 0; i < g_conf.number_of_feature; ++i) {
       gain[i] += g[i];
     }
+  }
+  for (size_t i = 0; i < g_conf.number_of_feature; ++i) {
+    std::cout<<"the "<<i<<"th feature "<<": "<<gain[i]<<std::endl;
   }
 }
 
@@ -152,5 +175,6 @@ void GBDT::Load(const std::string &s) {
 GBDT::~GBDT() {
   delete[] trees;
   delete[] gain;
+  delete[] gain_predict;
 }
 }

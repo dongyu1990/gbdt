@@ -25,8 +25,8 @@ int main(int argc, char *argv[]) {
   omp_set_num_threads(threads_wanted);
 #endif
 
-  g_conf.number_of_feature = 84;
-  g_conf.max_depth = 6;
+  g_conf.number_of_feature = 3;
+  g_conf.max_depth = 4;
   g_conf.iterations = 10;
   g_conf.shrinkage = 0.1F;
 
@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
     debug = boost::lexical_cast<int>(argv[8]);
   }
 
-  g_conf.loss = LOG_LIKELIHOOD;
+  g_conf.loss = SQUARED_ERROR;
   g_conf.debug = debug > 0? true : false;
 
   DataVector d;
