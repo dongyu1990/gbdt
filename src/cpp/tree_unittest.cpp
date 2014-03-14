@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
   PredictVector predict;
   for ( ; iter != d2.end(); ++iter) {
     std::cout << (*iter)->ToString() << std::endl;
-    ValueType p = tree2.Predict(**iter,true);
+    ValueType p = tree2.Predict(**iter,true,0);
     predict.push_back(p);
     // std::cout << p << "," << tree.Predict(**iter) << std::endl;
   }

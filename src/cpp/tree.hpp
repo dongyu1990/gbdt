@@ -5,6 +5,8 @@
 
 #include "data.hpp"
 #include <map>
+#include <stack>
+#include <cmath>
 #include <iostream>
 #include <vector>
 
@@ -52,7 +54,8 @@ class RegressionTree {
   void Fit(DataVector *data) { Fit(data, data->size()); }
   void Fit(DataVector *data, size_t len);
 
-  ValueType Predict(const Tuple &t, bool flag);
+  //ValueType Predict(const Tuple &t, bool flag);
+  ValueType Predict(const Tuple &t, bool flag, int num);
 
   std::string Save() const;
   void Load(const std::string &s);
@@ -72,7 +75,7 @@ class RegressionTree {
                   size_t depth,
                   double *gain);
 
-  static ValueType Predict(const Node *node, const Tuple &t, double * gain_predict);
+  static ValueType Predict(const Node *node, const Tuple &t, int num, double * gain_predict);
   static ValueType Predict(const Node *node, const Tuple &t);
 
   static void SaveAux(const Node *node,

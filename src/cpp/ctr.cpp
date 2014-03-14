@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
   DataVector::iterator iter = d2.begin();
   PredictVector predict;
   for ( ; iter != d2.end(); ++iter) {
-    ValueType p = Logit(gbdt.Predict(**iter));
+    ValueType p = Logit(gbdt.Predict(**iter, 2));
     predict.push_back(p);
 
   }

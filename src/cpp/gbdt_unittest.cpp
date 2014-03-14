@@ -83,10 +83,10 @@ int main(int argc, char *argv[]) {
   for ( ; iter != d2.end(); ++iter) {
     ValueType p;
     if (g_conf.loss == SQUARED_ERROR) {
-      p = gbdt2.Predict(**iter);
+      p = gbdt2.Predict(**iter,0);
       predict.push_back(p);
     } else if (g_conf.loss == LOG_LIKELIHOOD) {
-      p = gbdt2.Predict(**iter);
+      p = gbdt2.Predict(**iter,0);
       p = Logit(p);
       if (p >= 0.5)
         p = 1;

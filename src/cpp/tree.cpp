@@ -63,24 +63,57 @@ void RegressionTree::Fit(DataVector *data,
   }
 }
 
-ValueType RegressionTree::Predict(const Node *root, const Tuple &t, double * gain_predict) {
+ValueType RegressionTree::Predict(const Node *root, const Tuple &t, int num, double * gain_predict) {
+  if (num == 1){
+
   if (root->leaf) {
     return root->pred;
   }
   if (t.feature[root->index] == kUnknownValue) {
     if (root->child[Node::UNKNOWN]) {
       gain_predict[root->index] += (root->child[Node::UNKNOWN]->pred - root->pred);
-      return Predict(root->child[Node::UNKNOWN], t, gain_predict);
+      return Predict(root->child[Node::UNKNOWN], t, num,  gain_predict);
     } else {
       return root->pred;
     }
   } else if (t.feature[root->index] < root->value) {
     gain_predict[root->index] += (root->child[Node::LT]->pred - root->pred);
-    return Predict(root->child[Node::LT], t, gain_predict);
+    return Predict(root->child[Node::LT], t, num,  gain_predict);
   } else {
     gain_predict[root->index] += (root->child[Node::GE]->pred - root->pred);
-    return Predict(root->child[Node::GE], t,gain_predict);
+    return Predict(root->child[Node::GE], t, num, gain_predict);
   }
+}
+  if (num == 2){
+   // 非递归
+     std::stack<const Node *> pathstack;
+     while(!root->leaf){
+       if(t.feature[root->index] == kUnknownValue){
+          if(root->child[Node::UNKNOWN]){
+            pathstack.push(root);
+            root = root->child[Node::UNKNOWN];
+          }
+          else
+             return root->pred;
+        } 
+        else if(t.feature[root->index] < root->value)  {
+           pathstack.push(root);
+           root = root->child[Node::LT];
+           
+        }
+        else {
+           pathstack.push(root);
+           root = root->child[Node::GE];
+        }
+      }
+      if (!pathstack.empty()) {
+          const Node * toppath = pathstack.top();
+          if(gain_predict[toppath->index] < fabs(toppath->pred - root->pred))
+             gain_predict[toppath->index] = fabs(toppath->pred - root->pred);
+          pathstack.pop();
+      }
+      return root->pred;
+}
 }
 
 ValueType RegressionTree::Predict(const Node *root, const Tuple &t) {
@@ -112,12 +145,24 @@ void RegressionTree::Fit(DataVector *data, size_t len) {
   Fit(data, len, root, 0, gain);
 }
 
-ValueType RegressionTree::Predict(const Tuple &t , bool flag) {
-  if (flag)
+ValueType RegressionTree::Predict(const Tuple &t , bool flag, int num) {
+  if (flag && num == 1)
   {
     delete [] gain_predict;
     gain_predict = new double[g_conf.number_of_feature];
-    return Predict(root, t,gain_predict);
+    for(size_t i = 0; i < g_conf.number_of_feature; ++i){
+     gain_predict[i] = 0;
+    }
+    return Predict(root, t, num, gain_predict);
+  }
+  else if (flag && num == 2)
+  {
+    delete [] gain_predict;
+    gain_predict = new double[g_conf.number_of_feature];
+    for(size_t i = 0; i < g_conf.number_of_feature; ++i){
+     gain_predict[i] = 0;
+    }
+    return Predict(root, t, num, gain_predict);
   }
   else
       return Predict(root, t);

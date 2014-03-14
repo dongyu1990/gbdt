@@ -14,8 +14,13 @@ class GBDT {
           gain_predict(NULL){}
 
   void Fit(DataVector *d);
-  ValueType Predict(const Tuple &t)  {
-    return Predict(t, iterations, true);
+  ValueType Predict(const Tuple &t, int num)  {
+    // for train
+    if(num == 0)
+      return Predict(t, iterations, false);
+    // for predict method 1 or 2
+    else if (num == 1 || num == 2)
+      return Predict(t, iterations, true, num);
   }
 
   std::string Save() const;
@@ -25,6 +30,7 @@ class GBDT {
 
   ~GBDT();
  private:
+  ValueType Predict(const Tuple &t, size_t n, bool flag, int num);
   ValueType Predict(const Tuple &t, size_t n, bool flag);
   void Init(const DataVector &d, size_t len);
  private:

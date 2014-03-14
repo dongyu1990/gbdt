@@ -14,6 +14,59 @@
 #endif
 
 namespace gbdt {
+ValueType GBDT::Predict(const Tuple &t, size_t n,bool flag, int num) {
+  if (!trees)
+    return kUnknownValue;
+
+  assert(n <= iterations);
+
+  ValueType r = bias;
+  for (size_t i = 0; i < n; ++i) {
+    r += shrinkage * trees[i].Predict(t, flag,num);
+
+  }
+  if(flag && num == 1)
+ {
+  //caculate the gain_predict
+  delete[] gain_predict;
+  gain_predict = new double[g_conf.number_of_feature];
+
+  for (size_t i = 0; i < g_conf.number_of_feature; ++i) {
+    gain_predict[i] = 0.0;
+  }
+
+  for (size_t j = 0; j < iterations; ++j) {
+    double *g = trees[j].GetGain_predict();
+    for (size_t i = 0; i < g_conf.number_of_feature; ++i) {
+      gain_predict[i] += g[i];
+    }
+  }
+  for (size_t i = 0; i < g_conf.number_of_feature; ++i) {
+    std::cout<<"the "<<i<<"th feature "<<": "<<gain_predict[i]<<std::endl;
+ }
+ } 
+  if(flag && num == 2)
+ {
+  //caculate the gain_predict
+  delete[] gain_predict;
+  gain_predict = new double[g_conf.number_of_feature];
+
+  for (size_t i = 0; i < g_conf.number_of_feature; ++i) {
+    gain_predict[i] = 0.0;
+  }
+
+  for (size_t j = 0; j < iterations; ++j) {
+    double *g = trees[j].GetGain_predict();
+    for (size_t i = 0; i < g_conf.number_of_feature; ++i) {
+      gain_predict[i] += g[i];
+    }
+  }
+  for (size_t i = 0; i < g_conf.number_of_feature; ++i) {
+    std::cout<<"the "<<i<<"th feature "<<": "<<gain_predict[i]<<std::endl;
+ }
+ } 
+  return r;
+}
 ValueType GBDT::Predict(const Tuple &t, size_t n,bool flag) {
   if (!trees)
     return kUnknownValue;
@@ -22,7 +75,7 @@ ValueType GBDT::Predict(const Tuple &t, size_t n,bool flag) {
 
   ValueType r = bias;
   for (size_t i = 0; i < n; ++i) {
-    r += shrinkage * trees[i].Predict(t, flag);
+    r += shrinkage * trees[i].Predict(t, flag, 0);
 
   }
   if(flag)
